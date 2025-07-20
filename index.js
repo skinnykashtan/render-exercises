@@ -6,7 +6,7 @@ const app = express()
 morgan.token('body', (req) => {
     return JSON.stringify(req.body)
 })
-
+//kupa
 app.use(express.static('dist'))
 
 app.use(express.json())
