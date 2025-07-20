@@ -71,6 +71,10 @@ app.post('/api/persons', (req, res) => {
 
 })
 
+app.get('/', (req, res) => {
+  res.send('OK');
+});
+
 app.get('/api/persons', (request, response) => {
     response.json(persons)
 })
