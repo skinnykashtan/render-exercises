@@ -1,0 +1,22 @@
+#GET http://localhost:3003/api/persons/687ecfb80b108aa865bb41d2
+Accept: application/json
+
+###
+
+#POST http://localhost:3003/api/persons/
+#Content-Type: application/json
+#
+#{
+#  "name": "xdddd",
+#  "number": "53232555"
+#}
+
+###
+
+DELETE http://localhost:3003/api/persons/687ecfb80b108aa865bb41d2
+
+###
+
+
+
+

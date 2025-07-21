@@ -1,7 +1,9 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
-const {response} = require("express");
+const {response, request} = require("express");
 const app = express()
+const Person = require('./models/persons')
 
 morgan.token('body', (req) => {
     return JSON.stringify(req.body)
@@ -59,16 +61,14 @@ app.post('/api/persons', (req, res) => {
         })
     }
 
-    const person = {
-        id: generateId(),
+    const person = new Person({
         name: body.name,
         number: body.number
-    }
+    })
 
-    persons = persons.concat(person)
-
-    res.json(person)
-
+    person.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
 })
 
 app.get('/', (req, res) => {
@@ -76,25 +76,42 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = request.params.id
-    const person = persons.find(p => p.id === id)
-
-    if (person) {
+    Person.findById(request.params.id).then(person => {
+        if (!person) {
+            return response.status(404).json({ error: 'Nie znaleziono uzytkownika' });
+        }
         response.json(person)
-    } else {
-        response.status(404).end()
-    }
+    }).catch(error => {
+        if (error.name === 'CastError') {
+            return response.send(400).json({error: 'Bledne id' });
+        }
+
+        console.log(error)
+        response.status(500).json({ error: 'Cos poszlo nie tak...' });
+    })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
-    const id = req.params.id
-    persons = persons.filter(p => p.id !== id)
+    Person.findByIdAndDelete(req.params.id)
+        .then(deleted => {
+            if (!deleted) {
+                return res.status(404).json({ error: 'Notatka nie znaleziona' });
+            }
+            res.status(204).end();
+        }).catch(error => {
+        if (error.name === 'CastError') {
+            return res.send(400).json({error: 'Bledne id' });
+        }
 
-    res.status(200).end()
+        console.log(error)
+        res.status(500).json({ error: 'Cos poszlo nie tak...' });
+    })
 })
 
 app.get('/info', (request, response) => {
