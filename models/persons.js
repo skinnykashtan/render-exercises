@@ -1,14 +1,10 @@
 const mongoose = require('mongoose')
 
-const url = process.env.MONGODB_URI
+const url = MONGODB_URI
 
 mongoose.set('strictQuery',false)
 
-mongoose.connect(url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 30000
-})
+mongoose.connect(url)
     .then(result => {
       console.log('connected to MongoDB')
     })
