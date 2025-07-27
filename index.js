@@ -9,15 +9,13 @@ morgan.token('body', (req) => {
     return JSON.stringify(req.body)
 })
 //kupa
-app.use(express.static('dist'))
-
+// app.use(express.static('dist'))
 app.use(express.json())
-
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 let date = new Date().toString()
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
     if (!body.number || !body.name) {
@@ -36,58 +34,53 @@ app.post('/api/persons', (req, res) => {
         }).save();
     }).then(savedPerson => {
         res.status(201).json(savedPerson);
-    }).catch(err => {
-        res.status(400).json(err.message);
-    })
-
+    }).catch(error => next(error));
 })
 
-app.get('/', (req, res) => {
-    res.send('OK');
-});
-
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (req, res, next) => {
     Person.find({}).then(persons => {
-        response.json(persons)
-    })
+        res.status(200).json(persons);
+    }).catch(error => next(error));
 })
 
-app.get('/api/persons/:id', (request, response) => {
-    Person.findById(request.params.id).then(person => {
-        if (!person) {
-            return response.status(404).json({error: 'Nie znaleziono uzytkownika'});
+app.get('/api/persons/:id', (req, res, next) => {
+    Person.findById(request.params.id)
+        .then(person => {
+        if (person) {
+            return res.json(person);
         }
-        response.json(person)
-    }).catch(error => {
-        if (error.name === 'CastError') {
-            return response.status(400).json({error: 'Bledne id'});
-        }
-
-        console.log(error)
-        response.status(500).json({error: 'Cos poszlo nie tak...'});
-    })
+        res.status(404).end();
+    }).catch(error => next(error));
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndDelete(req.params.id)
-        .then(deleted => {
-            if (!deleted) {
-                return res.status(404).json({error: 'Notatka nie znaleziona'});
+        .then(result => {
+            if (result) {
+                return res.status(204).end();
             }
-            res.status(204).end();
-        }).catch(error => {
-        if (error.name === 'CastError') {
-            return res.send(400).json({error: 'Bledne id'});
-        }
-
-        console.log(error)
-        res.status(500).json({error: 'Cos poszlo nie tak...'});
-    })
+            res.status(400).json({ error: 'person not found' });
+        }).catch(error => next(error));
 })
 
-app.get('/info', (request, response) => {
-    response.send(`<p>Phonebook has info for ${persons.reduce((acc) => acc + 1, 0)} people</p>
-    <p>${date}</p>`)
+app.put('/api/persons/:id', (req, res, next) => {
+    const { number } = req.body;
+    const id = req.params.id;
+
+    Person.findByIdAndUpdate(
+        id,
+        { number },
+        {
+            new: true,
+            runValidators: true,
+            context: 'query'
+        })
+        .then(updatedPerson => {
+            if (!updatedPerson) {
+                return res.status(404).end();
+            }
+            return res.status(200).json(updatedPerson);
+        }).catch(error => next(error))
 })
 
 const unknownEndpoint = (req, res) => {
@@ -95,6 +88,20 @@ const unknownEndpoint = (req, res) => {
 }
 
 app.use(unknownEndpoint)
+
+const errorHandler = (error, req, res, next) => {
+    console.error(error.message);
+
+    if (error.name === 'CastError') {
+        return res.status(400).json({ error: 'malformatted id' });
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message})
+    }
+
+    return res.status(500).json({ error: 'internal server error' });
+}
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {

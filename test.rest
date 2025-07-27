@@ -1,21 +1,28 @@
-#GET http://localhost:3003/api/persons/687ecfb80b108aa865bb41d2
+GET http://localhost:3004/api/persons/688277db328b7a39d28d4f59
 Accept: application/json
 
 ###
 
-#POST http://localhost:3003/api/persons/
-#Content-Type: application/json
-#
-#{
-#  "name": "xdddd",
-#  "number": "53232555"
-#}
+POST http://localhost:3004/api/persons/
+Content-Type: application/json
+
+{
+  "name": "XDDDDDDDDDD",
+  "number": "53232555"
+}
 
 ###
 
-DELETE http://localhost:3003/api/persons/687ecfb80b108aa865bb41d2
+DELETE http://localhost:3004/api/persons/6883dfbe62030eb2d83cc607
 
 ###
+
+PUT http://localhost:3004/api/persons/6883e1d262030eb2d83cc615
+Content-Type: application/json
+
+{
+  "number": "323232"
+}
 
 
 
